@@ -59,6 +59,7 @@ public class Principal extends javax.swing.JFrame {
             nr = 0;
         }
     }
+
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -354,13 +355,10 @@ public class Principal extends javax.swing.JFrame {
 
     private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
         // TODO add your handling code here:
-System.err.println("columna"+jTable1.getSelectedRow());
-        this.setTitle("" + jTable1.getSelectedRows());
 
         if (jTable1.getSelectedRow() != nr) {
             botonplay.setText("Play");
-            jTable1.setRowSelectionInterval(jTable1.getSelectedRow(),jTable1.getSelectedRow());
-            
+
         } else {
             botonplay.setText("Pausa");
         }
@@ -401,9 +399,14 @@ System.err.println("columna"+jTable1.getSelectedRow());
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
 
         if (!historialrepro.isEmpty()) {
+
             detenRep();
-            posActual = posActual-1;
-            nr = historialrepro.get(posActual-1);
+            posActual = posActual - 1;
+            if (posActual == 0) {
+                posActual = 1;
+            }
+
+            nr = historialrepro.get(posActual - 1);
             try {
                 flujolectura = AudioSystem.getAudioInputStream(new File(rutas.get(nr)));
                 Clip clipSeleccionado = AudioSystem.getClip();
@@ -420,11 +423,9 @@ System.err.println("columna"+jTable1.getSelectedRow());
                 Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
             }
             botonplay.setText("Pausa");
-            
-            
+
             //historialrepro.add(nr);
             //posActual = historialrepro.size();
-
         }
 
 
@@ -483,7 +484,7 @@ System.err.println("columna"+jTable1.getSelectedRow());
             //t1.restart();
             botonplay.setText("Play");
             jProgressBar1.setString("00:00:00");
-         
+
         }
 
     }
@@ -518,36 +519,61 @@ System.err.println("columna"+jTable1.getSelectedRow());
         if (aleatorio) {
             reproduce();
         } else {
-            nr++;
-            if (nr >= rutas.size()) {
-                nr = 0;
+
+            if (posActual == historialrepro.size()) {//si no ha habido backs
+                nr++;
+                if (nr >= rutas.size()) {
+                    nr = 0;
+                }
+                detenRep();
+                //codigo para decirir quie aleatorio o no aleatorio  
+                System.out.println("pista:" + nr);
+                try {
+                    flujolectura = AudioSystem.getAudioInputStream(new File(rutas.get(nr)));
+                    Clip clipSeleccionado = AudioSystem.getClip();
+                    clipSeleccionado.open(flujolectura);
+                    clipSeleccionado.start();
+                    clips.add(clipSeleccionado);
+
+                    jTable1.setRowSelectionInterval(nr, nr);
+
+                    t1.start();
+                } catch (UnsupportedAudioFileException e) {
+                    setTitle("Modo de audio no soportado");
+                } catch (IOException e) {
+                    setTitle("No se pudo abrir o leer el archivo...");
+                } catch (LineUnavailableException ex) {
+                    Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                botonplay.setText("Pausa");
+                historialrepro.add(nr);
+                posActual = historialrepro.size();
+
+            } else {
+
+                detenRep();
+                posActual = posActual + 1;
+                nr = historialrepro.get(posActual - 1);
+                try {
+                    flujolectura = AudioSystem.getAudioInputStream(new File(rutas.get(nr)));
+                    Clip clipSeleccionado = AudioSystem.getClip();
+                    clipSeleccionado.open(flujolectura);
+                    clipSeleccionado.start();
+                    clips.add(clipSeleccionado);
+                    jTable1.setRowSelectionInterval(nr, nr);
+                    t1.start();
+                } catch (UnsupportedAudioFileException e) {
+                    setTitle("Modo de audio no soportado");
+                } catch (IOException e) {
+                    setTitle("No se pudo abrir o leer el archivo...");
+                } catch (LineUnavailableException ex) {
+                    Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                botonplay.setText("Pausa");
+
             }
-
-            detenRep();
-            //codigo para decirir quie aleatorio o no aleatorio  
-            System.out.println("pista:" + nr);
-            try {
-                flujolectura = AudioSystem.getAudioInputStream(new File(rutas.get(nr)));
-                Clip clipSeleccionado = AudioSystem.getClip();
-                clipSeleccionado.open(flujolectura);
-                clipSeleccionado.start();
-                clips.add(clipSeleccionado);
-
-                jTable1.setRowSelectionInterval(nr, nr);
-
-                t1.start();
-            } catch (UnsupportedAudioFileException e) {
-                setTitle("Modo de audio no soportado");
-            } catch (IOException e) {
-                setTitle("No se pudo abrir o leer el archivo...");
-            } catch (LineUnavailableException ex) {
-                Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            botonplay.setText("Pausa");
-            historialrepro.add(nr);
-            posActual = historialrepro.size();
-
         }
+
     }//GEN-LAST:event_botonsiguienteActionPerformed
 
     public static void main(String args[]) {
@@ -608,9 +634,15 @@ System.err.println("columna"+jTable1.getSelectedRow());
                 jProgressBar1.setString("" + clips.get(0).getMicrosecondPosition());
                 jProgressBar1.setStringPainted(true);
             }
-
+            //reproduccion autimatica
+            if (clips.get(nr).getFramePosition() == clips.get(nr).getFrameLength()) {
+                
+               
+            }
         }
+
     };
+    
 
     private int getPorcentajeCancion(long posicionActual, long tiempoTotal) {
         long porcentaje = (posicionActual * 100) / tiempoTotal;
@@ -694,9 +726,9 @@ System.err.println("columna"+jTable1.getSelectedRow());
 
     private void reproduceUna() {
         System.out.println("Reproduzco solo una rolita");
-        System.out.println("num."+jTable1.getSelectedRow());
-        System.out.println("size rutas"+rutas.size());
-        
+        System.out.println("num." + jTable1.getSelectedRow());
+        System.out.println("size rutas" + rutas.size());
+
         try {
             flujolectura = AudioSystem.getAudioInputStream(new File(rutas.get(jTable1.getSelectedRow())));
             nr = jTable1.getSelectedRow();
