@@ -1,5 +1,4 @@
 
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -9,16 +8,11 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.sound.sampled.Control;
-import javax.sound.sampled.DataLine;
-import javax.sound.sampled.DataLine.Info;
-import javax.sound.sampled.Line;
+import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.Mixer;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JFileChooser;
 import javax.swing.Timer;
@@ -27,8 +21,7 @@ import javax.swing.table.DefaultTableModel;
 
 public class Principal extends javax.swing.JFrame {
 
-    //int i = 0;
-    Clip clipx;
+    
     int posActual;
     boolean aleatorio;
     Timer t1;
@@ -37,27 +30,21 @@ public class Principal extends javax.swing.JFrame {
     ArrayList<Clip> clips = new ArrayList<Clip>();
     ArrayList<Long> bufferPausa = new ArrayList<Long>();
     ArrayList<Integer> historialrepro = new ArrayList<Integer>();
-    AudioFileFormat.Type formatosSoportados[];
-
     Timer timerMuestra20;
-    Mixer.Info mezclador;
     Listener esc;
-
     int max = 0;
     int nr = -1;
+    float volumen;
 
     public Principal() {
         initComponents();
-        //mezclador = AudioSystem.get
-        formatosSoportados = AudioSystem.getAudioFileTypes();
+        
         t1 = new Timer(300, tiempo);
         timerMuestra20 = new Timer(20000, listenerTimerMuestra);
         jProgressBar1.setMaximum(100);
         esc = new Listener(this);
         reproducirMuestra.setSelected(false);
-        //jProgressBar1.setBackground(new Color(0x003366));
-        //jProgressBar1.setOpaque(false);
-        cargaROLAS();
+
     }
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -74,6 +61,8 @@ public class Principal extends javax.swing.JFrame {
         jSeparator1 = new javax.swing.JSeparator();
         jLabel1 = new javax.swing.JLabel();
         jCheckBox1 = new javax.swing.JCheckBox();
+        sliderVolumen = new javax.swing.JSlider();
+        sliderValance = new javax.swing.JSlider();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -147,7 +136,7 @@ public class Principal extends javax.swing.JFrame {
             }
         });
 
-        jLabel1.setText("jLabel1");
+        jLabel1.setText("Stop");
 
         jCheckBox1.setText("Aleatorio");
         jCheckBox1.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -161,8 +150,38 @@ public class Principal extends javax.swing.JFrame {
             }
         });
 
+        sliderVolumen.setMajorTickSpacing(1);
+        sliderVolumen.setMaximum(6);
+        sliderVolumen.setMinimum(-70);
+        sliderVolumen.setOrientation(javax.swing.JSlider.VERTICAL);
+        sliderVolumen.setToolTipText("Volumen");
+        sliderVolumen.setValue(-30);
+        sliderVolumen.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                sliderVolumenStateChanged(evt);
+            }
+        });
+        sliderVolumen.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseDragged(java.awt.event.MouseEvent evt) {
+                sliderVolumenMouseDragged(evt);
+            }
+        });
+
+        sliderValance.setMinimum(-100);
+        sliderValance.setPaintLabels(true);
+        sliderValance.setPaintTicks(true);
+        sliderValance.setToolTipText("Valance");
+        sliderValance.setValue(0);
+        sliderValance.setName("Valance"); // NOI18N
+        sliderValance.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseDragged(java.awt.event.MouseEvent evt) {
+                sliderValanceMouseDragged(evt);
+            }
+        });
+
         jMenu1.setText("File");
 
+        jMenuItem1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.event.InputEvent.CTRL_MASK));
         jMenuItem1.setText("Agregar archivos");
         jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -171,6 +190,7 @@ public class Principal extends javax.swing.JFrame {
         });
         jMenu1.add(jMenuItem1);
 
+        jMenuItem2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
         jMenuItem2.setText("Agregar directorio");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -205,50 +225,64 @@ public class Principal extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addComponent(jSeparator1)
+            .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
+                        .addGap(5, 5, 5)
+                        .addComponent(botonStop)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(botonBack)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(botonPlay, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(botonSiguiente)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jScrollPane1)
                             .addComponent(jProgressBar1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(18, 18, 18))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(17, 17, 17)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jCheckBox1)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(botonStop)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(botonBack)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(botonPlay)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(botonSiguiente)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 260, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(sliderVolumen, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(29, 29, 29))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(sliderValance, javax.swing.GroupLayout.DEFAULT_SIZE, 248, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jCheckBox1)
+                        .addGap(18, 18, 18)))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 273, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
-            .addComponent(jSeparator1)
-            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(10, 10, 10)
+                .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jProgressBar1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jProgressBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(sliderVolumen, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(botonPlay)
                             .addComponent(botonSiguiente)
                             .addComponent(botonBack)
                             .addComponent(botonStop))
-                        .addGap(28, 28, 28)
-                        .addComponent(jCheckBox1)
-                        .addGap(0, 65, Short.MAX_VALUE))
+                        .addGap(38, 38, 38)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jCheckBox1)
+                            .addComponent(sliderValance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(0, 17, Short.MAX_VALUE))
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                .addGap(29, 29, 29)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(5, 5, 5)
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -257,7 +291,6 @@ public class Principal extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
 
     private void botonPlayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonPlayActionPerformed
 //START
@@ -272,7 +305,7 @@ public class Principal extends javax.swing.JFrame {
                 botonPlay.setText("Resume");
             } else {
                 if (bufferPausa.size() != 0 && botonPlay.getText().equals("Resume")) {//no hay reproduccion y buscamos pausas
-                    startPausa();  
+                    startPausa();
                 } else {
                     //GESTION PAUSAS....
 
@@ -305,34 +338,26 @@ public class Principal extends javax.swing.JFrame {
 
             }
         } else {
-            System.out.println("No tienes lista de reproduccion cargada!");
-            jLabel1.setForeground(Color.red);
-            jLabel1.setText("No tienes una lista de reproduccion cargada");
+         
+            jLabel1.setText("No tienes una lista de reproduccion cargada! Crtl + O para buscar");
 
-            try {
-                Thread.sleep(1500);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-            jLabel1.setForeground(Color.black);
-            jLabel1.setText("Sin reproduccion...");
-
+        
         }
 
 
     }//GEN-LAST:event_botonPlayActionPerformed
 
-
     private void jProgressBar1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jProgressBar1MouseClicked
         // TODO add your handling code here:
+        
+        if(!timerMuestra20.isRunning()){
+            
         if (!botonPlay.getText().equals("Play")) {//mover solo cuando haya reproduccion en curso.
 
             if (clips.size() > 1) {
                 //multiples clips reproduciendose;
                 ///int promedio;
                 //int tiempoMax
-
             } else {
 
                 //only a clip
@@ -351,6 +376,9 @@ public class Principal extends javax.swing.JFrame {
             }
         }
 
+            
+        }
+        
 
     }//GEN-LAST:event_jProgressBar1MouseClicked
 
@@ -375,6 +403,7 @@ public class Principal extends javax.swing.JFrame {
         FileNameExtensionFilter filtroImagen = new FileNameExtensionFilter("archivos wav", "wav", "aiff", "ogg");
         selector.setFileFilter(filtroImagen);
         int r = selector.showOpenDialog(null);
+        
         if (r == JFileChooser.APPROVE_OPTION) {
             try {
                 File archivos[] = selector.getSelectedFiles();
@@ -444,8 +473,10 @@ public class Principal extends javax.swing.JFrame {
 
         JFileChooser s = new JFileChooser();
         s.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        s.showOpenDialog(null);
+        int resultado  = s.showOpenDialog(null);
 
+        if(resultado == JFileChooser.APPROVE_OPTION){
+            
         //File f = new File("."); // current directory
         File f = s.getSelectedFile();
 
@@ -460,31 +491,43 @@ public class Principal extends javax.swing.JFrame {
             }
         };
 
+        
+        
+        
         File[] files = f.listFiles(textFilter);
         int i = 0;
         for (File file : files) {
-            if (file.isDirectory()) {
-                System.out.print("directory:");
-            } else {
-                System.out.print("file:");
-            }
-
+          
             rutas.add(file.getAbsolutePath());
             fila[0] = (i + 1) + "  " + file.getName();
             i++;
             modelo.addRow(fila);
         }
 
+            
+        }
 
     }//GEN-LAST:event_jMenuItem2ActionPerformed
-
+ public void volumen (){
+        int i;
+        volumen=sliderVolumen.getValue();
+        for(i=0;i<clips.size();i++){
+ 
+        FloatControl gainControl = (FloatControl) clips.get(i).getControl(FloatControl.Type.MASTER_GAIN);
+        gainControl.setValue(volumen);
+        
+    
+            }
+    }
     private void detenRep() throws IOException {
         if (clips.size() != 0) {
             t1.stop();
 
             if (timerMuestra20.isRunning()) {
+                if(!reproducirMuestra.isSelected()){   
                 timerMuestra20.restart();
                 timerMuestra20.stop();
+                }
             }
 
             for (int i = 0; i < clips.size(); i++) {
@@ -493,10 +536,10 @@ public class Principal extends javax.swing.JFrame {
                 clips.get(i).flush();
                 clips.get(i).close();
             }
-            
+
             bufferPausa.clear();
-            
-            
+
+
             clips.clear();
             //flujolectura.close();
             //t1.restart();
@@ -522,13 +565,13 @@ public class Principal extends javax.swing.JFrame {
     }//GEN-LAST:event_botonStopActionPerformed
 
     private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
-
-
     }//GEN-LAST:event_jCheckBox1ActionPerformed
 
     public void ff() throws IOException {
         //detenRep();
 
+        if(!clips.isEmpty()){
+        
         if (aleatorio) {
             reproduce();
         } else {
@@ -539,7 +582,7 @@ public class Principal extends javax.swing.JFrame {
                     nr = 0;
                 }
                 detenRep();
-                //codigo para decirir quie aleatorio o no aleatorio  
+                //codigo para decidir  aleatorio o no aleatorio  
                 System.out.println("pista:" + nr);
                 try {
                     flujolectura = AudioSystem.getAudioInputStream(new File(rutas.get(nr)));
@@ -585,8 +628,8 @@ public class Principal extends javax.swing.JFrame {
                     Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 botonPlay.setText("Pausa");
-
             }
+        }
         }
     }
 
@@ -607,15 +650,16 @@ public class Principal extends javax.swing.JFrame {
 
     private void reproducirMuestraActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reproducirMuestraActionPerformed
         // TODO add your handling code here:
-        if (reproducirMuestra.isSelected()) {
+        if (reproducirMuestra.isSelected()) {   
             try {
                 ff();
+                timerMuestra20.start();
             } catch (IOException ex) {
                 Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
-            timerMuestra20.stop();
             timerMuestra20.restart();
+            timerMuestra20.stop();
 
         }
 
@@ -623,8 +667,29 @@ public class Principal extends javax.swing.JFrame {
 
     private void reproducirMuestraStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_reproducirMuestraStateChanged
         // TODO add your handling code here:
-
     }//GEN-LAST:event_reproducirMuestraStateChanged
+
+    private void sliderVolumenStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_sliderVolumenStateChanged
+volumen();        // TODO add your handling code here:
+    }//GEN-LAST:event_sliderVolumenStateChanged
+
+    private void sliderVolumenMouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_sliderVolumenMouseDragged
+volumen();        // TODO add your handling code here:
+    }//GEN-LAST:event_sliderVolumenMouseDragged
+
+    private void sliderValanceMouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_sliderValanceMouseDragged
+        // TODO add your handling code here:
+        
+          int i;
+        float value = (float)sliderValance.getValue();
+        
+        
+        for(i=0;i<clips.size();i++){
+        FloatControl gainControl = (FloatControl) clips.get(i).getControl(FloatControl.Type.BALANCE);
+        gainControl.setValue((float) (value/100.0));
+        }
+        sliderValance.setToolTipText("Valance: "+(float) (value/100.0));
+    }//GEN-LAST:event_sliderValanceMouseDragged
 
     public static void main(String args[]) {
 
@@ -634,7 +699,6 @@ public class Principal extends javax.swing.JFrame {
             }
         });
     }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton botonBack;
     private javax.swing.JButton botonPlay;
@@ -654,38 +718,79 @@ public class Principal extends javax.swing.JFrame {
     private javax.swing.JTextArea jTextArea1;
     private javax.swing.JMenu menuReproducir;
     private javax.swing.JCheckBoxMenuItem reproducirMuestra;
+    private javax.swing.JSlider sliderValance;
+    private javax.swing.JSlider sliderVolumen;
     // End of variables declaration//GEN-END:variables
-
     ActionListener tiempo = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
+
             if (!clips.isEmpty()) {
+                long seg;                         
+                long segt;
+                long min;
+                long mint; 
+                String tTotal = "";
+
                 if (clips.size() > 1) {//reproduccion simultanea.
-                    //multiples clips reproduciendose;
-                    ///int promedio;
-                    //int tiempoMax
                     int suma = 0;
                     long promTiempo = 0;
+                    long promTiempoTotal = 0;
                     for (int i = 0; i < clips.size(); i++) {
                         suma = suma + getPorcentajeCancion(clips.get(i).getMicrosecondPosition(), clips.get(i).getMicrosecondLength());
                         promTiempo = clips.get(i).getMicrosecondPosition();
+                        promTiempoTotal += clips.get(i).getMicrosecondLength();
                     }
                     promTiempo = promTiempo / clips.size();
                     int prom = suma / clips.size();
                     setPorcentajeBarra(prom);
-                    jProgressBar1.setString(promTiempo + "");
+                    seg = promTiempo / 1000000;
+                    min = seg / 60;
+                    segt = promTiempoTotal / 1000000;
+                    mint = promTiempoTotal / 60;
+                   
+                    if (mint * 60 != 0) {
+                        tTotal = mint + ":" + segt % (mint * 60);
+                    } else {
+                        tTotal = mint + ":" + segt;
+                    }
+                   
                     jProgressBar1.setStringPainted(true);
                 } else {
+                    seg = clips.get(0).getMicrosecondPosition() / 1000000;
+                    segt = clips.get(0).getMicrosecondLength() / 1000000;
+                    min = seg / 60;
+                    mint = segt / 60;
+
+                    if (mint * 60 != 0) {
+                        tTotal = mint + ":" + segt % (mint * 60);
+                    } else {
+                        tTotal = mint + ":" + segt;
+                    }
+
+                    if (min * 60 != 0) {
+                        jProgressBar1.setString(min + ":" + seg % (min * 60) + " / " + tTotal);
+                    } else {
+                        jProgressBar1.setString(min + ":" + seg + " / " + tTotal);
+                    }
                     //only a clip
                     long porcentajeRepActual = getPorcentajeCancion(clips.get(0).getMicrosecondPosition(), clips.get(0).getMicrosecondLength());
                     setPorcentajeBarra((int) porcentajeRepActual);
-                    jProgressBar1.setString("" + clips.get(0).getMicrosecondPosition());
+                    //jProgressBar1.setString("" + clips.get(0).getMicrosecondPosition());
                     jProgressBar1.setStringPainted(true);
+                    
+                    jTextArea1.setText("Chanels: "+clips.get(0).getFormat().getChannels()+"\n"
+                            +"Format Encodign: "+ clips.get(0).getFormat().getEncoding()+"\n"
+                            +"Format frame rate: "+ clips.get(0).getFormat().getFrameRate()+"\n"
+                            +"Format size: "+ clips.get(0).getFormat().getFrameSize()+"\n"
+                            +"Format sample rate: "+ clips.get(0).getFormat().getSampleRate()+"\n"
+                            +"format sample size (bits): "+ clips.get(0).getFormat().getSampleSizeInBits()+"\n"
+                    );
+                    
                 }
                 //reproduccion autimatica
             }
         }
     };
-
     ActionListener listenerTimerMuestra = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
 
@@ -779,9 +884,9 @@ public class Principal extends javax.swing.JFrame {
     }
 
     private void reproduceUna() {
-        System.out.println("Reproduzco solo una rolita");
+        System.out.println("Reproduzco solo una");
         System.out.println("num." + jTable1.getSelectedRow());
-        System.out.println("size rutas" + rutas.size());
+       
 
         try {
             flujolectura = AudioSystem.getAudioInputStream(new File(rutas.get(jTable1.getSelectedRow())));
@@ -813,7 +918,7 @@ public class Principal extends javax.swing.JFrame {
             System.out.println("pista:" + nr);
         }
 
-        System.out.println("no tienes nada selecionado, reproduzco por default or random....");
+        System.out.println("Sin seleccion, reproduciendon en modo Random");
         detenRep();
         //codigo para decidir que aleatorio o no aleatorio  
         System.out.println("pista:" + nr);
@@ -852,7 +957,6 @@ public class Principal extends javax.swing.JFrame {
         File f = new File("C:/Users/Jorge/Documents/ROLAS");
 
         FilenameFilter textFilter = new FilenameFilter() {
-
             public boolean accept(File dir, String name) {
                 String lowercaseName = name.toLowerCase();
                 if (lowercaseName.endsWith(".wav") || lowercaseName.endsWith(".aiff") || lowercaseName.endsWith(".au")) {
@@ -867,12 +971,7 @@ public class Principal extends javax.swing.JFrame {
         File[] files = f.listFiles(textFilter);
         int i = 0;
         for (File file : files) {
-            if (file.isDirectory()) {
-                System.out.print("directory:");
-            } else {
-                System.out.print("file:");
-            }
-
+           
             rutas.add(file.getAbsolutePath());
             fila[0] = (i + 1) + "  " + file.getName();
             i++;
@@ -899,10 +998,10 @@ public class Principal extends javax.swing.JFrame {
             //only a clip
             jProgressBar1.setString("" + clips.get(0).getMicrosecondPosition());
             /*Line.Info inf = clips.get(0).getLineInfo();
-            Control []ctrl = clips.get(0).getControls();
-            Control.Type tipo = ctrl[0].getType();
-              */          
-            
+             Control []ctrl = clips.get(0).getControls();
+             Control.Type tipo = ctrl[0].getType();
+             */
+
             jProgressBar1.setStringPainted(true);
 
             File archivo = new File(rutas.get(nr));
@@ -920,5 +1019,4 @@ public class Principal extends javax.swing.JFrame {
         bufferPausa.clear();
         botonPlay.setText("Pausa");
     }
-
 }

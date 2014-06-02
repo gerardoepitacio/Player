@@ -31,6 +31,7 @@ public class Listener implements LineListener {
             System.out.println("START");
             
             principal.setStateBar(principal.getActualPlay());
+                
             
         } else if (type == LineEvent.Type.STOP) {
             //System.out.println(principal.clips.get(0).getFramePosition() + ":::::" + principal.clips.get(0).getFrameLength());
