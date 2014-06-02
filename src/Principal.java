@@ -1010,6 +1010,7 @@ volumen();        // TODO add your handling code here:
         }
     }
 
+    
     private void startPausa() {
         t1.start();
         for (int i = 0; i < clips.size(); i++) {
